@@ -17,3 +17,4 @@
 **/__pycache__/*
 **/._DS_Store
 **/*.stl
+**/case_*
