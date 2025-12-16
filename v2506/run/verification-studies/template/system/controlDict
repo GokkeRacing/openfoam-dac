@@ -14,16 +14,14 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "../settings"
-
 application         simpleFoam;
 startFrom           latestTime;
 startTime           0;
 stopAt              endTime;
-endTime             400;
+endTime             1000;
 deltaT              1;
 writeControl        timeStep;
-writeInterval       10;
+writeInterval       50;
 purgeWrite          0;
 writeFormat         ascii;
 writePrecision      12;
@@ -82,8 +80,7 @@ functions
         field           D_CO2;
         fieldType       volTensorField;
         writeControl    writeTime;
-        #include        "../settings"
-        expression      "tensor($D_CO2_l, 0, 0, 0, 0, 0, 0, 0, 0)";
+        expression      "tensor({D_CO2_l}, 0, 0, 0, 0, 0, 0, 0, 0)";
         dimensions      [0 2 -1 0 0 0 0];
     }
 
@@ -94,20 +91,28 @@ functions
         field           D_S;
         fieldType       volTensorField;
         writeControl    writeTime;
-        #include        "../settings"
-        expression      "tensor($D_S, 0, 0, 0, 0, 0, 0, 0, 0)";
+        expression      "tensor({D_S}, 0, 0, 0, 0, 0, 0, 0, 0)";
         dimensions      [0 2 -1 0 0 0 0];
     }
 
-    kf
+    k_rxn
     {
         type            exprField;
         libs            (fieldFunctionObjects);
-        field           kf;
+        field           k_rxn;
         writeControl    writeTime;
-        #include        "../settings"
-        expression      "$kf";
+        expression      "{k_rxn}";
         dimensions      [0 0 -1 0 0 0 0];
+    }
+
+    H_cc
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           H_cc;
+        writeControl    writeTime;
+        expression      "{H_cc}";
+        dimensions      [0 0 0 0 0 0 0];
     }
 
     CO2
@@ -148,7 +153,7 @@ functions
                         const scalarField& V = mesh_.V();
                         
                         const fvMesh& mesh = eqn.psi().mesh();
-                        const volScalarField& kf = mesh.lookupObject<volScalarField>("kf");
+                        const volScalarField& k_rxn = mesh.lookupObject<volScalarField>("k_rxn");
                         const volScalarField& S  = mesh.lookupObject<volScalarField>("S");
                         const volScalarField& S_old = S.oldTime();
 
@@ -157,7 +162,7 @@ functions
 
                         forAll(Sp, cellI)
                         {
-                            const scalar coeff = 2 * kf[cellI] * S_old[cellI];
+                            const scalar coeff = 2 * k_rxn[cellI] * S_old[cellI];
                             Sp[cellI] -= coeff * V[cellI];  // implicit consumption of S
                         }
                     #};
@@ -203,7 +208,7 @@ functions
                         const scalarField& V = mesh_.V();
                         
                         const fvMesh& mesh = eqn.psi().mesh();
-                        const volScalarField& kf = mesh.lookupObject<volScalarField>("kf");
+                        const volScalarField& k_rxn = mesh.lookupObject<volScalarField>("k_rxn");
                         const volScalarField& CO2  = mesh.lookupObject<volScalarField>("CO2");
                         const volScalarField& CO2_old = CO2.oldTime();                       
 
@@ -212,7 +217,7 @@ functions
 
                         forAll(Sp, cellI)
                         {
-                            const scalar coeff = kf[cellI] * CO2_old[cellI];
+                            const scalar coeff = k_rxn[cellI] * CO2_old[cellI];
                             Sp[cellI] -= coeff * V[cellI];  // implicit consumption of S
                         }
                     #};

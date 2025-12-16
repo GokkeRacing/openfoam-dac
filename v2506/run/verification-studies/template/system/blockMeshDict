@@ -14,7 +14,10 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "../settings"
+R {R};
+z {z};
+n_R {n_R};
+n_z {n_z};
 
 scale       1;
 halfAngle   1;
@@ -35,7 +38,7 @@ vertices
 
 blocks
 (
-    hex (0 1 2 0 3 4 5 3) ($n_R 1 $n_z) simpleGrading (1 1 1)
+    hex (0 1 2 0 3 4 5 3) ($n_R 1 $n_z) simpleGrading (0.25 1 1)
 );
 
 edges

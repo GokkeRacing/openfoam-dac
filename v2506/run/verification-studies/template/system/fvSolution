@@ -19,8 +19,8 @@ solvers
     {
         solver          PCG;
         preconditioner  DIC;
-        tolerance       1e-8;
-        relTol          1e-4;
+        tolerance       1e-6;
+        relTol          1e-3;
         maxIter         1000;
     }
 
@@ -28,7 +28,7 @@ solvers
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-8;
+        tolerance       1e-9;
         relTol          1e-4;
         maxIter         1000;
     }
@@ -37,7 +37,8 @@ solvers
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-6;
+        tolerance       1e-12;
+        relTol          1e-4;
         maxIter         1000;
     }
 
@@ -45,7 +46,8 @@ solvers
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        tolerance       1e-6;
+        tolerance       1e-12;
+        relTol          1e-4;
         maxIter         1000;
     }
 }
@@ -59,9 +61,10 @@ SIMPLE
 
     residualControl
     {
-        p               1e-5;   // Less strict initially
-        S               1e-6;   // Less strict initially
-        CO2             1e-6;   // Less strict initially
+        p               1e-6;
+        U               1e-6;
+        S               1e-12;
+        CO2             1e-12;
     }
 }
 
