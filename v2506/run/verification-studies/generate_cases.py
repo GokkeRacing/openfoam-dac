@@ -44,14 +44,23 @@ for i in range(nCases):
         parameter['D_CO2_l'] = 2e-10
         parameter['H_cc'] = 3.25
         parameter['C_S'] = 1.0
-        parameter['z'] = 3
+        
         parameter['nu'] = 1e-6
-        parameter['Uavg'] = parameter['D_CO2_l']*parameter['z']/(parameter['R']*parameter['R']*parameter['zeta'])
-        parameter['K_ext'] = parameter['Bi']*parameter['H_cc']*parameter['D_CO2_l']/parameter['R']
-        parameter['D_S'] = parameter['theta']*parameter['D_CO2_l']
-        parameter['C_CO2_g'] = parameter['epsilon']*parameter['C_S']/parameter['H_cc']
-        parameter['C_CO2_l'] = parameter['H_cc']*parameter['C_CO2_g']
-        parameter['k_rxn'] = parameter['Da']*parameter['D_CO2_l']/(parameter['C_S']*parameter['R']*parameter['R'])
+        parameter['Uavg'] = 3.84e-5
+        parameter['K_ext'] = 0.0013
+        parameter['D_S'] = 4.8e-11
+        parameter['C_CO2_g'] = 1.6e-05
+        parameter['C_CO2_l'] = 5.2e-05
+        parameter['k_rxn'] = 96.0
+
+        parameter['z'] = 3.0*(parameter['R']/(250e-6))**2
+        #parameter['Uavg'] = parameter['z']*parameter['D_CO2_l']/(parameter['R']*parameter['R']*parameter['zeta'])
+        #parameter['K_ext'] = parameter['Bi']*parameter['H_cc']*parameter['D_CO2_l']/parameter['R']
+        #parameter['D_S'] = parameter['theta']*parameter['D_CO2_l']
+        #parameter['C_CO2_g'] = parameter['epsilon']*parameter['C_S']/parameter['H_cc']
+        #parameter['C_CO2_l'] = parameter['H_cc']*parameter['C_CO2_g']
+        #parameter['k_rxn'] = parameter['Da']*parameter['D_CO2_l']/(parameter['C_S']*parameter['R']*parameter['R'])
+
 
         with open(pathSettingsFile, 'a') as file:
             for key, value in parameter.items():

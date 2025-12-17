@@ -3,7 +3,7 @@
 
 # Define the range of cases
 START_CASE=0
-END_CASE=24
+END_CASE=6
 
 echo "Starting parallel simulation of all cases (case_0000 to case_0028)..."
 echo "================================================"

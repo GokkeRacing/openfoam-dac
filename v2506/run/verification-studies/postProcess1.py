@@ -56,11 +56,11 @@ def read_parameter_from_settings(parameter, settings_file):
 if __name__ == "__main__":
     cwd = Path(__file__).parent
     
-    #myrange = [0,1,2,3,4,5,6]
+    myrange = [0,1,2,3,4,5,6]
     #myrange = [7,8,9,10,11]
     #myrange = [12,13]
     #myrange = [14,15,16,17]
-    myrange = [18,19,20,21,23,23]
+    #myrange = [0]
 
     numbers = [f"case_{i:04d}" for i in myrange]
 
@@ -73,8 +73,8 @@ if __name__ == "__main__":
     print(f"Found {len(case_dirs)} case directories")
     
     fig, ax = plt.subplots()
-    ref_value = 500  # Reference value
-    paramter = 'Bi'
+    ref_value = 250e-6  # Reference value
+    paramter = 'R'
     
     # Store line data for annotation
     line_data = []
@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 print(f"  Skipping {case_name}: S values are zero or invalid")
                 continue
             # Plot S concentration for this case
-            x_data = means[:, 0]/3*250
+            x_data = read_parameter_from_settings('D_CO2_l', settings_file)*means[:, 0]/(read_parameter_from_settings('Uavg', settings_file)*read_parameter_from_settings('R', settings_file)**2)
             y_data = means[:, 2]/max_S
             line, = ax.plot(x_data, y_data, linewidth=2)
             
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     
     # Load and plot reference data from CSV
     try:
-        ref_data = pd.read_csv(cwd / 'fig4.csv', header=1)
+        ref_data = pd.read_csv(cwd / 'fig5.csv', header=1)
         
         # Get the line colors to match scatter plots with lines
         line_colors = [d['color'] for d in line_data]
