@@ -37,8 +37,8 @@ for i in range(nCases):
         parameter['zeta'] = df['zeta'][i]
         parameter['epsilon'] = df['epsilon'][i]
 
-        parameter['n_R'] = 250
-        parameter['n_z'] = 250
+        parameter['n_R'] = 200
+        parameter['n_z'] = 200
         parameter['n_procs'] = 4
 
         parameter['D_CO2_l'] = 2e-10
@@ -47,7 +47,7 @@ for i in range(nCases):
         
         parameter['nu'] = 1e-6
         parameter['Uavg'] = 3.84e-5
-        parameter['K_ext'] = 0.0013
+        parameter['K_ext'] = 1.3e-3
         parameter['D_S'] = 4.8e-11
         parameter['C_CO2_g'] = 1.6e-05
         parameter['C_CO2_l'] = 5.2e-05
