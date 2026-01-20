@@ -89,7 +89,7 @@ void implicitGradientFvPatchScalarField::updateCoeffs()
 
     const scalarField& delta = patch().deltaCoeffs();
 
-    // Implementing: gradient * D_CO2_l = -K_ext*(C_CO2_g - phi/H_cc)
+    // Implementing: grad(phi) * D_CO2_l = -K_ext*(C_CO2_g - phi/H_cc)
     // Rearranged: D_CO2_l * grad(phi) + (K_ext/H_cc) * phi = K_ext * C_CO2_g
     //
     // mixedFvPatchField uses:
