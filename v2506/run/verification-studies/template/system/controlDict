@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  dev
-     \\/     M anipulation  |
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2512                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -35,10 +35,9 @@ libs
     "libexternalSpecieDiffusionResistance.so"
 );
 
+
 functions
 {
-    #include "columnAverage"
-
     writeCellVolumes
     {
         type            writeCellVolumes;
@@ -60,7 +59,7 @@ functions
         field           D_CO2;
         fieldType       volTensorField;
         writeControl    writeTime;
-        expression      "tensor({D_CO2_l}, 0, 0, 0, 0, 0, 0, 0, 0)";
+        expression      "tensor(1.6e-9, 0, 0, 0, 0, 0, 0, 0, 0)";
         dimensions      [0 2 -1 0 0 0 0];
     }
 
@@ -71,7 +70,7 @@ functions
         field           D_S;
         fieldType       volTensorField;
         writeControl    writeTime;
-        expression      "tensor({D_S}, 0, 0, 0, 0, 0, 0, 0, 0)";
+        expression      "tensor(2.7e-9, 0, 0, 0, 0, 0, 0, 0, 0)";
         dimensions      [0 2 -1 0 0 0 0];
     }
 
@@ -81,10 +80,9 @@ functions
         libs            (fieldFunctionObjects);
         field           k_rxn;
         writeControl    writeTime;
-        expression      "{k_rxn}";
+        expression      "pow(10, 11.365-(2211/298.15)) * pow(10, 0.1065*S+0.368)";
         dimensions      [0 0 -1 0 0 0 0];
     }
-        // expression      "pow(10, 11.365-(2211/T)) * pow(10, 0.5*(0.28*S+0.301*S_inlet)+0.134*(S_inlet-S))";
 
     H_cc
     {
@@ -92,7 +90,7 @@ functions
         libs            (fieldFunctionObjects);
         field           H_cc;
         writeControl    writeTime;
-        expression      "{H_cc}";
+        expression      "0.42";
         dimensions      [0 0 0 0 0 0 0];
     }
 
@@ -101,7 +99,7 @@ functions
         type            aniScalarTransport;
         libs            (solverFunctionObjects);
         writeControl    writeTime;
-        field           CO2;
+        field           C_CO2;
         nut             D_CO2;
         alphaD          0;
         alphaDt         1;
@@ -113,7 +111,7 @@ functions
                     type            scalarCodedSource;
                     name            CO2_react;
                     selectionMode   all;
-                    fields          (CO2);
+                    fields          (C_CO2);
                     active          yes;
 
                     codeOptions
@@ -135,14 +133,14 @@ functions
                         
                         const fvMesh& mesh = eqn.psi().mesh();
                         const volScalarField& k_rxn = mesh.lookupObject<volScalarField>("k_rxn");
-                        const volScalarField& S  = mesh.lookupObject<volScalarField>("S");
-                        const volScalarField& S_old = S.oldTime();
+                        const volScalarField& C_S  = mesh.lookupObject<volScalarField>("C_S");
+                        const volScalarField& C_Sold = C_S.oldTime();
 
                         scalarField& Sp = eqn.diag();
 
                         forAll(Sp, cellI)
                         {
-                            const scalar coeff = 2 * k_rxn[cellI] * S_old[cellI];
+                            const scalar coeff = 0.5 * k_rxn[cellI] * C_Sold[cellI];
                             Sp[cellI] -= coeff * V[cellI];
                         }
                     #};
@@ -155,7 +153,7 @@ functions
         type            aniScalarTransport;
         libs            (solverFunctionObjects);
         writeControl    writeTime;
-        field           S;
+        field           C_S;
         nut             D_S;
         alphaD          0;
         alphaDt         1;
@@ -167,7 +165,7 @@ functions
                     type            scalarCodedSource;
                     name            S_react;
                     selectionMode   all;
-                    fields          (S);
+                    fields          (C_S);
                     active          yes;
 
                     codeOptions
@@ -189,14 +187,14 @@ functions
                         
                         const fvMesh& mesh = eqn.psi().mesh();
                         const volScalarField& k_rxn = mesh.lookupObject<volScalarField>("k_rxn");
-                        const volScalarField& CO2  = mesh.lookupObject<volScalarField>("CO2");
-                        const volScalarField& CO2_old = CO2.oldTime();                       
+                        const volScalarField& C_CO2  = mesh.lookupObject<volScalarField>("C_CO2");
+                        const volScalarField& C_CO2old = C_CO2.oldTime();                       
 
                         scalarField& Sp = eqn.diag();
 
                         forAll(Sp, cellI)
                         {
-                            const scalar coeff = k_rxn[cellI] * CO2_old[cellI];
+                            const scalar coeff = k_rxn[cellI] * C_CO2old[cellI];
                             Sp[cellI] -= coeff * V[cellI];
                         }
                     #};

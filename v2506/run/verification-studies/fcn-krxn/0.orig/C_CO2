@@ -10,25 +10,28 @@ FoamFile
     format      ascii;
     class       volScalarField;
     location    "0";
-    object      S;
+    object      C_CO2;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dimensions      [];
 
-internalField   uniform {C_S};
+internalField   uniform 0;
 
 boundaryField
 {
     surface
     {
-        type            zeroGradient;
-        value           $internalField;
+        type       externalSpecieDiffusionResistance;
+        H_cc       0.42;
+        D_CO2_l    1.6e-9;
+        C_CO2_g    1.8e-5;
+        K_ext      6.4e-3;
     }
     inlet
     {
         type            fixedValue;
-        value           $internalField;
+        value           uniform 0;
     }
     outlet
     {

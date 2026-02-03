@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2512                                 |
+|  \\    /   O peration     | Version:  v2412                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -14,10 +14,10 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-R {R};
-z {z};
-n_R {n_R};
-n_z {n_z};
+R 900e-6;
+z 1.175;
+n_R 200;
+n_z 200;
 
 scale       1;
 halfAngle   1;
@@ -38,7 +38,19 @@ vertices
 
 blocks
 (
-    hex (0 1 2 0 3 4 5 3) ($n_R 1 $n_z) simpleGrading (0.02 1 10)
+    hex (0 1 2 0 3 4 5 3) ($n_R 1 $n_z) simpleGrading 
+    (
+        (
+            (0.99 0.05 0.05)   // 99% x-dir, 5% cells, expansion = 20
+            (0.01 0.95 0.05)   // 1% x-dir, 95% cells, expansion = 20
+        )
+        1
+        (
+            (0.3 0.15 1)
+            (0.2 0.6 1)
+            (0.5 0.25 1)
+        )
+    )
 );
 
 edges
@@ -74,7 +86,6 @@ boundary
             (3 4 5 3)
         );
     }
-
     wedge_lower
     {
         type wedge;
@@ -83,7 +94,6 @@ boundary
             (0 1 4 3)
         );
     }
-
     wedge_upper
     {
         type wedge;
