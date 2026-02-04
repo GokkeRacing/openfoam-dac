@@ -15,7 +15,7 @@ internal_CO2
     {
         line_1
         {
-            type    midPointAndFace;
+            type    midPoint;
             axis    z;
             start   (0 0 -1e-6);
             end     (0 0 10);
@@ -40,7 +40,7 @@ internal_S
     {
         line_1
         {
-            type    midPointAndFace;
+            type    midPoint;
             axis    z;
             start   (0 0 -1e-6);
             end     (0 0 10);
