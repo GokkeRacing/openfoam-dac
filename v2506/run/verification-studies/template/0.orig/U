@@ -71,6 +71,11 @@ boundaryField
     {
         type            wedge;
     }
+    defaultFaces
+    {
+        type            empty;
+        value           $internalField;
+    }
 }
 
 

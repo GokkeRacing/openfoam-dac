@@ -420,5 +420,4 @@ bool Foam::functionObjects::aniScalarTransport::write()
     return true;
 }
 
-
 // ************************************************************************* //
