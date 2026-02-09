@@ -1,5 +1,3 @@
-import numpy as np
-
 Parameter = {}
 
 Parameter['R'] = 250e-6             # m (Radius of the fiber)  
