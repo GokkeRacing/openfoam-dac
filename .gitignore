@@ -13,3 +13,6 @@
 !**/fcn-krxn/**/0.orig
 !**/fcn-krxn/**/constant
 !**/fcn-krxn/**/system
+
+**/linux64*
+**/lnInclude*
