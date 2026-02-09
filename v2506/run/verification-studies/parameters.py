@@ -25,7 +25,7 @@ Parameter['Uavg'] = Parameter['D_CO2'] * Parameter['L']/(zeta*Parameter['R']**2)
 epsilon = 5.2e-5
 Parameter['C_CO2_g'] = epsilon * Parameter['C_S0'] / Parameter['H_cc']  # mol/L (Concentration of CO2 in gas phase)
 
-Bi = 500*1000
+Bi = 500
 Parameter['K_ext'] = Bi * Parameter['H_cc'] * Parameter['D_CO2'] / (Parameter['R'])  # m/s (External mass transfer coefficient)
 
 theta = 0.24
