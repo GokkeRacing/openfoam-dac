@@ -13,6 +13,7 @@ gnuplot<<'EOF'
     set datafile commentschars "#"
     set datafile separator ","
     set grid
+    set yrange [-0.05:1.05];
 
     # --------------------------------------------------
     # Check if simulation data exists
