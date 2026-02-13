@@ -10,157 +10,85 @@ writeData
     #{
         #include "fvCFD.H"
         #include <fstream>
-        #include <map>
     #};
 
     codeWrite
     #{
-
-    // Read parameters from settings file
-    std::ifstream settingsFile("overview");
-    std::map<word, scalar> params;
     
-    word key;
-    scalar value;
-    while (settingsFile >> key >> value)
-    {
-        params[key] = value;
-    }
-    settingsFile.close();
-
-    label nLayers = label(params["n_z"]);
-    
+    const vectorField faceCentres = mesh().boundaryMesh()["surface"].faceCentres();
+    boundBox bb(faceCentres);
+    label maxDir = bb.maxDim();
+   
     // Lookup fields
     const volScalarField& S = mesh().lookupObject<volScalarField>("C_S");
     const volScalarField& CO2 = mesh().lookupObject<volScalarField>("C_CO2");
-    const volVectorField& C = mesh().C();
-    const scalarField& V = mesh().V();
+    const vectorField& cellCentres = mesh().C();
+    const scalarField& cellVolumes = mesh().V();
+
+    //Create list of lists to gather data for each processor at their own index
+    List<List<scalar>> gatheredCoords(Pstream::nProcs());
+    List<List<scalar>> gatheredS(Pstream::nProcs());
+    List<List<scalar>> gatheredCO2(Pstream::nProcs());
+    List<List<scalar>> gatheredVol(Pstream::nProcs());
+    List<List<scalar>> gatheredSurface(Pstream::nProcs());
     
-    // Get minimum and maximum z coordinates
-    scalar minZ = GREAT;
-    scalar maxZ = -GREAT;
-    forAll(C, cellI)
-    {
-        scalar z = C[cellI].component(2);
-        minZ = min(minZ, z);
-        maxZ = max(maxZ, z);
-    }
-    
-    reduce(minZ, minOp<scalar>());
-    reduce(maxZ, maxOp<scalar>());
-    
-    // Gather all z-coordinates to master for global sorting
-    List<scalar> allZ(C.size());
-    forAll(C, cellI)
-    {
-        allZ[cellI] = C[cellI].component(2);
-    }
-    
-    // Combine lists from all processors
-    List<List<scalar>> gatheredZ(Pstream::nProcs());
-    gatheredZ[Pstream::myProcNo()] = allZ;
-    Pstream::gatherList(gatheredZ);
-    
-    // Flatten and broadcast
-    List<scalar> globalZ;
+    gatheredCoords[Pstream::myProcNo()] = cellCentres.component(maxDir);
+    gatheredS[Pstream::myProcNo()] = S.primitiveField();
+    gatheredCO2[Pstream::myProcNo()] = CO2.primitiveField();
+    gatheredVol[Pstream::myProcNo()] = cellVolumes;
+    gatheredSurface[Pstream::myProcNo()] = faceCentres.component(maxDir);
+
+    Pstream::gatherList(gatheredCoords);
+    Pstream::gatherList(gatheredS);
+    Pstream::gatherList(gatheredCO2);
+    Pstream::gatherList(gatheredVol);
+    Pstream::gatherList(gatheredSurface);
+
     if (Pstream::master())
     {
-        label totalSize = 0;
-        forAll(gatheredZ, proci)
+        // Flatten gathered cell data to iterate over
+        DynamicList<scalar> coords, sVals, co2Vals, vols, allSurfaceCoords;
+        forAll(gatheredCoords, proci)
         {
-            totalSize += gatheredZ[proci].size();
+            coords.append(gatheredCoords[proci]);
+            sVals.append(gatheredS[proci]);
+            co2Vals.append(gatheredCO2[proci]);
+            vols.append(gatheredVol[proci]);
+            allSurfaceCoords.append(gatheredSurface[proci]);
         }
-        
-        globalZ.setSize(totalSize);
-        label idx = 0;
-        forAll(gatheredZ, proci)
-        {
-            forAll(gatheredZ[proci], i)
-            {
-                globalZ[idx++] = gatheredZ[proci][i];
-            }
-        }
-    }
-    Pstream::broadcast(globalZ);
-    
-    // Sort globally and determine layer boundaries
-    Foam::sort(globalZ);
-    label totalCells = globalZ.size();
-    label cellsPerLayer = max(1, totalCells / nLayers);
-    
-    scalarField layerBoundaries(nLayers + 1);
-    layerBoundaries[0] = minZ - SMALL;
-    for (label i = 1; i < nLayers; i++)
-    {
-        label idx = min(i * cellsPerLayer, totalCells - 1);
-        layerBoundaries[i] = globalZ[idx];
-    }
-    layerBoundaries[nLayers] = maxZ + SMALL;
-    
-    // Initialize arrays for each layer
-    scalarField layerS_sum(nLayers, 0.0);
-    scalarField layerCO2_sum(nLayers, 0.0);
-    scalarField layerVolume(nLayers, 0.0);
-    scalarField layerZ_sum(nLayers, 0.0);
-    
-    // Accumulate values for each layer based on global boundaries
-    forAll(C, cellI)
-    {
-        scalar z = C[cellI].component(2);
-        
-        // Find which layer this cell belongs to
-        label layerIdx = 0;
-        for (label i = 0; i < nLayers; i++)
-        {
-            if (z >= layerBoundaries[i] && z < layerBoundaries[i+1])
-            {
-                layerIdx = i;
-                break;
-            }
-        }
-        
-        layerS_sum[layerIdx] += S[cellI] * V[cellI];
-        layerCO2_sum[layerIdx] += CO2[cellI] * V[cellI];
-        layerVolume[layerIdx] += V[cellI];
-        layerZ_sum[layerIdx] += z * V[cellI];
-    }
-    
-    // Sum across all processors
-    if (Pstream::parRun())
-    {
-        reduce(layerS_sum, sumOp<scalarField>());
-        reduce(layerCO2_sum, sumOp<scalarField>());
-        reduce(layerVolume, sumOp<scalarField>());
-        reduce(layerZ_sum, sumOp<scalarField>());
-    }
-    
-    // Write data to file in time directory
-    if (Pstream::master())
-    {
+
+        // Output files
         fileName outputFile_S = "S.csv";
         fileName outputFile_CO2 = "CO2.csv";
         std::ofstream outS(outputFile_S);
         std::ofstream outCO2(outputFile_CO2);
         outS.precision(12);
         outCO2.precision(12);
-        outS << "#z S" << std::endl;
-        outCO2 << "#z CO2" << std::endl;
+        outS << "#coord S" << std::endl;
+        outCO2 << "#coord CO2" << std::endl;
         
-        forAll(layerS_sum, layerIdx)
+        // For each surface coordinate along averaging direction, average cells at that position
+        forAll(allSurfaceCoords, i)
         {
-            if (layerVolume[layerIdx] > VSMALL)
+            scalar targetCoord = allSurfaceCoords[i];
+            scalar sumS = 0.0, sumCO2 = 0.0, sumVol = 0.0;
+            
+            forAll(coords, cellI)
             {
-                // Volume-weighted average z position for this layer
-                scalar z = layerZ_sum[layerIdx] / layerVolume[layerIdx];
-                scalar S_avg = layerS_sum[layerIdx] / layerVolume[layerIdx];
-                scalar CO2_avg = layerCO2_sum[layerIdx] / layerVolume[layerIdx];
-                outS << z << ", " << S_avg << std::endl;
-                outCO2 << z << ", " << CO2_avg << std::endl;
+                if (mag(coords[cellI] - targetCoord) < 1e-6)
+                {
+                    sumS += sVals[cellI] * vols[cellI];
+                    sumCO2 += co2Vals[cellI] * vols[cellI];
+                    sumVol += vols[cellI];
+                }
             }
+            
+            outS << targetCoord << ", " << sumS/sumVol << std::endl;
+            outCO2 << targetCoord << ", " << sumCO2/sumVol << std::endl;
         }
+        
         outS.close();
         outCO2.close();
-        
         Info << "Layer-averaged data written to " << outputFile_S << " and " << outputFile_CO2 << endl;
     }
     
