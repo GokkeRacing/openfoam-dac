@@ -17,8 +17,16 @@ writeData
     
     const vectorField faceCentres = mesh().boundaryMesh()["surface"].faceCentres();
     boundBox bb(faceCentres);
-    label maxDir = bb.maxDim();
-   
+    
+    // Find dimension with maximum extent
+    vector bbMax = bb.max();
+    vector bbMin = bb.min();
+    vector span = bbMax - bbMin;
+    
+    label maxDir = 0;
+    if (mag(span[1]) > mag(span[0])) maxDir = 1;
+    if (mag(span[2]) > mag(span[maxDir])) maxDir = 2;
+
     // Lookup fields
     const volScalarField& S = mesh().lookupObject<volScalarField>("C_S");
     const volScalarField& CO2 = mesh().lookupObject<volScalarField>("C_CO2");
@@ -37,6 +45,8 @@ writeData
     gatheredCO2[Pstream::myProcNo()] = CO2.primitiveField();
     gatheredVol[Pstream::myProcNo()] = cellVolumes;
     gatheredSurface[Pstream::myProcNo()] = faceCentres.component(maxDir);
+
+    //Info << gatheredSurface[Pstream::myProcNo()] << endl;
 
     Pstream::gatherList(gatheredCoords);
     Pstream::gatherList(gatheredS);
