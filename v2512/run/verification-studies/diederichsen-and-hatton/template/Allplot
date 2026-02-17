@@ -14,7 +14,7 @@ gnuplot<<'EOF'
     set datafile separator ","
     set grid
     set yrange [-0.05:1.05];
-    set xrange [-12.5:262.5]
+    set xrange [-12.5:130]
 
     # --------------------------------------------------
     # Check if simulation data exists
@@ -28,8 +28,8 @@ gnuplot<<'EOF'
     # CO2 plot
     set terminal svg size 800,600 enhanced font 'Verdana,12' dynamic mouse
     set output 'CO2.svg'
-    set xlabel "Non-dimensional axial position, {/Symbol z}"
-    set ylabel "Non-dimensional radial-averaged concentration, {/Symbol f}_{CO2}"
+    set xlabel "Non-dimensional axial position, ζ"
+    set ylabel "Non-dimensional radial-averaged concentration, φ_{CO_2}"
 
     if (sim_co2_exists eq "1" && ref_co2_exists eq "1") {
         plot \
@@ -49,8 +49,8 @@ gnuplot<<'EOF'
     # S plot
     set terminal svg size 800,600 enhanced font 'Verdana,12' dynamic mouse
     set output 'S.svg'
-    set xlabel "Non-dimensional axial position, {/Symbol z}"
-    set ylabel "Non-dimensional radial-averaged concentration, {/Symbol f}_{S}"
+    set xlabel "Non-dimensional axial position, ζ"
+    set ylabel "Non-dimensional radial-averaged concentration, φ_{S}"
 
     if (sim_s_exists eq "1" && ref_s_exists eq "1") {
         plot \
