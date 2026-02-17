@@ -1,0 +1,106 @@
+writeData
+{
+    libs ("libutilityFunctionObjects.so");
+    type coded;
+    name writeData;
+    enabled yes;
+    writeControl writeTime;
+
+    codeInclude
+    #{
+        #include "fvCFD.H"
+        #include <fstream>
+    #};
+
+    codeWrite
+    #{
+    
+    const vectorField faceCentres = mesh().boundaryMesh()["surface"].faceCentres();
+    boundBox bb(faceCentres);
+    
+    // Find dimension with maximum extent
+    vector bbMax = bb.max();
+    vector bbMin = bb.min();
+    vector span = bbMax - bbMin;
+    
+    label maxDir = 0;
+    if (mag(span[1]) > mag(span[0])) maxDir = 1;
+    if (mag(span[2]) > mag(span[maxDir])) maxDir = 2;
+
+    // Lookup fields
+    const volScalarField& S = mesh().lookupObject<volScalarField>("C_S");
+    const volScalarField& CO2 = mesh().lookupObject<volScalarField>("C_CO2");
+    const vectorField& cellCentres = mesh().C();
+    const scalarField& cellVolumes = mesh().V();
+
+    //Create list of lists to gather data for each processor at their own index
+    List<List<scalar>> gatheredCoords(Pstream::nProcs());
+    List<List<scalar>> gatheredS(Pstream::nProcs());
+    List<List<scalar>> gatheredCO2(Pstream::nProcs());
+    List<List<scalar>> gatheredVol(Pstream::nProcs());
+    List<List<scalar>> gatheredSurface(Pstream::nProcs());
+    
+    gatheredCoords[Pstream::myProcNo()] = cellCentres.component(maxDir);
+    gatheredS[Pstream::myProcNo()] = S.primitiveField();
+    gatheredCO2[Pstream::myProcNo()] = CO2.primitiveField();
+    gatheredVol[Pstream::myProcNo()] = cellVolumes;
+    gatheredSurface[Pstream::myProcNo()] = faceCentres.component(maxDir);
+
+    //Info << gatheredSurface[Pstream::myProcNo()] << endl;
+
+    Pstream::gatherList(gatheredCoords);
+    Pstream::gatherList(gatheredS);
+    Pstream::gatherList(gatheredCO2);
+    Pstream::gatherList(gatheredVol);
+    Pstream::gatherList(gatheredSurface);
+
+    if (Pstream::master())
+    {
+        // Flatten gathered cell data to iterate over
+        DynamicList<scalar> coords, sVals, co2Vals, vols, allSurfaceCoords;
+        forAll(gatheredCoords, proci)
+        {
+            coords.append(gatheredCoords[proci]);
+            sVals.append(gatheredS[proci]);
+            co2Vals.append(gatheredCO2[proci]);
+            vols.append(gatheredVol[proci]);
+            allSurfaceCoords.append(gatheredSurface[proci]);
+        }
+
+        // Output files
+        fileName outputFile_S = "S.csv";
+        fileName outputFile_CO2 = "CO2.csv";
+        std::ofstream outS(outputFile_S);
+        std::ofstream outCO2(outputFile_CO2);
+        outS.precision(12);
+        outCO2.precision(12);
+        outS << "#coord S" << std::endl;
+        outCO2 << "#coord CO2" << std::endl;
+        
+        // For each surface coordinate along averaging direction, average cells at that position
+        forAll(allSurfaceCoords, i)
+        {
+            scalar targetCoord = allSurfaceCoords[i];
+            scalar sumS = 0.0, sumCO2 = 0.0, sumVol = 0.0;
+            
+            forAll(coords, cellI)
+            {
+                if (mag(coords[cellI] - targetCoord) < 1e-6)
+                {
+                    sumS += sVals[cellI] * vols[cellI];
+                    sumCO2 += co2Vals[cellI] * vols[cellI];
+                    sumVol += vols[cellI];
+                }
+            }
+            
+            outS << targetCoord << ", " << sumS/sumVol << std::endl;
+            outCO2 << targetCoord << ", " << sumCO2/sumVol << std::endl;
+        }
+        
+        outS.close();
+        outCO2.close();
+        Info << "Layer-averaged data written to " << outputFile_S << " and " << outputFile_CO2 << endl;
+    }
+    
+    #};
+}

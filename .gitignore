@@ -10,9 +10,9 @@
 !**/fcn-krxn/**/
 !**/fcn-krxn/**/overview
 !**/fcn-krxn/**/All*
-!**/fcn-krxn/**/0.orig
-!**/fcn-krxn/**/constant
-!**/fcn-krxn/**/system
+!**/fcn-krxn/**/0.orig/**
+!**/fcn-krxn/**/constant/*Properties
+!**/fcn-krxn/**/system/**
 
 **/linux64*
 **/lnInclude
